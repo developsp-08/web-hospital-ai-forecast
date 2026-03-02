@@ -1,0 +1,344 @@
+/* --- Dashboard Wrapper --- */
+.db-container {
+  padding: 4rem;
+  /* max-width: 1440px; */
+  margin: 0 auto;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  /* ใส่ Gradient สีฟ้าอ่อนให้พื้นหลังดูสบายตาแบบการแพทย์ */
+  background: linear-gradient(135deg, #f0f4f8 0%, #e1eaf4 100%);
+  color: #1e293b;
+  min-height: 100vh;
+}
+
+/* --- Header Section --- */
+.db-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.db-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  /* ใส่ Gradient ให้ตัวหนังสือหัวข้อ */
+  background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.db-header p {
+  margin: 0.25rem 0 0 0;
+  color: #64748b;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.db-location-box {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  padding: 0.85rem 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  text-align: right;
+}
+
+.db-location-wrapper {
+  display: flex;
+  align-items: center;
+  color: #334155;
+  justify-content: flex-end;
+  font-weight: 600;
+}
+
+.db-map-icon {
+  margin-right: 6px;
+  color: #2563eb;
+}
+
+.db-time-text {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+/* --- Metrics Grid --- */
+.db-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.db-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Hover Effect ให้การ์ดเด้งขึ้นเบาๆ */
+.db-card:hover,
+.db-chart-card:hover,
+.db-factor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.1);
+}
+
+/* ใส่ Gradient ให้พื้นหลังของการ์ดแต่ละใบกลืนไปกับขอบสี */
+.db-card-blue {
+  border-left: 5px solid #3b82f6;
+  background: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.05) 0%,
+    rgba(255, 255, 255, 1) 30%
+  );
+}
+.db-card-rose {
+  border-left: 5px solid #f43f5e;
+  background: linear-gradient(
+    90deg,
+    rgba(244, 63, 94, 0.05) 0%,
+    rgba(255, 255, 255, 1) 30%
+  );
+}
+.db-card-purple {
+  border-left: 5px solid #a855f7;
+  background: linear-gradient(
+    90deg,
+    rgba(168, 85, 247, 0.05) 0%,
+    rgba(255, 255, 255, 1) 30%
+  );
+}
+.db-card-orange {
+  border-left: 5px solid #f97316;
+  background: linear-gradient(
+    90deg,
+    rgba(249, 115, 22, 0.08) 0%,
+    rgba(255, 255, 255, 1) 40%
+  );
+}
+
+.db-card-title {
+  display: flex;
+  align-items: center;
+  color: #475569;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  gap: 0.5rem;
+}
+
+.db-card-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.db-value-rose {
+  color: #e11d48;
+}
+.db-value-orange {
+  background: linear-gradient(90deg, #ea580c 0%, #f97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.5rem;
+}
+
+.db-trend-up {
+  color: #10b981;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  background: #d1fae5;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.db-trend-down {
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+  background: #fee2e2;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+.db-er-peak-text {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+/* --- Charts Section --- */
+.db-charts-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .db-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.db-chart-card {
+  background: white;
+  padding: 1.75rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.db-chart-header {
+  display: flex;
+  align-items: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #1e293b;
+}
+
+.db-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.db-dot-blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+.db-dot-rose {
+  background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
+}
+
+.db-chart-wrapper {
+  height: 320px;
+  width: 100%;
+}
+
+/* --- External Factors Section --- */
+.db-factors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.db-factor-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.db-icon-box {
+  padding: 0.85rem;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* อัปเกรด Icon Box ให้เป็น Gradient */
+.db-icon-blue {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1d4ed8;
+}
+.db-icon-purple {
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+  color: #7e22ce;
+}
+
+.db-factor-content {
+  flex: 1;
+}
+
+.db-factor-content-full {
+  width: 100%;
+}
+
+.db-factor-content h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.db-factor-content p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.db-action-text {
+  display: inline-block;
+  margin-top: 0.75rem;
+  color: #ea580c;
+  font-weight: 600;
+  background: #fff7ed;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #ffedd5;
+}
+
+.db-factor-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.db-factor-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px dashed #cbd5e1;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.db-factor-list li:last-child {
+  border-bottom: none;
+}
+
+.db-risk-rose {
+  color: #e11d48;
+  font-weight: 600;
+}
+
+.db-risk-orange {
+  color: #ea580c;
+  font-weight: 600;
+}
+.db-risk-green {
+  color: #10b981;
+  font-weight: 600;
+}
