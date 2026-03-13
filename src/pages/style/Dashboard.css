@@ -1,7 +1,6 @@
 /* --- Dashboard Wrapper --- */
 .db-container {
   padding: 4rem;
-  /* max-width: 1440px; */
   margin: 0 auto;
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
@@ -75,7 +74,6 @@
 .db-upload-btn:hover {
   background: #2563eb;
 }
-
 .db-upload-status {
   font-size: 0.85rem;
   color: #10b981;
@@ -94,7 +92,6 @@
   margin-right: 6px;
   color: #2563eb;
 }
-
 .db-time-text {
   font-size: 0.8rem;
   color: #64748b;
@@ -172,13 +169,11 @@
   margin-bottom: 0.75rem;
   gap: 0.5rem;
 }
-
 .db-card-value {
   font-size: 2rem;
   font-weight: 800;
   color: #0f172a;
 }
-
 .db-value-rose {
   color: #e11d48;
 }
@@ -198,7 +193,6 @@
   padding: 2px 8px;
   border-radius: 12px;
 }
-
 .db-trend-down {
   color: #ef4444;
   font-size: 0.85rem;
@@ -208,7 +202,6 @@
   padding: 2px 8px;
   border-radius: 12px;
 }
-
 .db-er-peak-text {
   font-size: 0.85rem;
   color: #64748b;
@@ -223,7 +216,6 @@
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
-
 @media (max-width: 1024px) {
   .db-charts-grid {
     grid-template-columns: 1fr;
@@ -240,7 +232,6 @@
     transform 0.3s ease,
     box-shadow 0.3s ease;
 }
-
 .db-chart-header {
   display: flex;
   align-items: center;
@@ -249,7 +240,6 @@
   margin-bottom: 1.5rem;
   color: #1e293b;
 }
-
 .db-dot {
   width: 14px;
   height: 14px;
@@ -257,14 +247,12 @@
   margin-right: 0.75rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-
 .db-dot-blue {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
 }
 .db-dot-rose {
   background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);
 }
-
 .db-chart-wrapper {
   height: 320px;
   width: 100%;
@@ -282,7 +270,6 @@
     transform 0.3s ease,
     box-shadow 0.3s ease;
 }
-
 .db-staffing-header {
   display: flex;
   align-items: center;
@@ -290,29 +277,41 @@
   margin-bottom: 1.5rem;
   justify-content: space-between;
 }
-
 .db-staffing-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-
 .db-staffing-header h2 {
   margin: 0;
   font-size: 1.2rem;
   color: #1e293b;
 }
-
+.db-ward-select {
+  margin-left: 15px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  outline: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.db-ward-select:hover {
+  border-color: #94a3b8;
+}
 .db-table-responsive {
   overflow-x: auto;
 }
-
 .db-staffing-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
-
 .db-staffing-table th {
   padding: 12px 16px;
   background: #f8fafc;
@@ -321,37 +320,30 @@
   font-size: 0.9rem;
   border-bottom: 2px solid #e2e8f0;
 }
-
 .db-staffing-table td {
   padding: 14px 16px;
   border-bottom: 1px solid #e2e8f0;
   color: #334155;
   font-size: 0.95rem;
 }
-
 .db-staffing-table tr:last-child td {
   border-bottom: none;
 }
-
 .db-staffing-table tr:hover td {
   background: #f1f5f9;
 }
-
 .td-bold {
   font-weight: 600;
   color: #0f172a !important;
 }
-
 .th-highlight {
   color: #2563eb !important;
 }
-
 .td-highlight {
   color: #2563eb !important;
   font-weight: bold;
   font-size: 1.1rem !important;
 }
-
 .badge-shortage {
   background: #fef2f2;
   color: #e11d48;
@@ -361,7 +353,6 @@
   font-size: 0.85rem;
   border: 1px solid #fecdd3;
 }
-
 .badge-optimal {
   background: #ecfdf5;
   color: #059669;
@@ -378,7 +369,6 @@
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
 }
-
 .db-factor-card {
   background: white;
   padding: 1.5rem;
@@ -392,13 +382,11 @@
     transform 0.3s ease,
     box-shadow 0.3s ease;
 }
-
 .db-icon-box {
   padding: 0.85rem;
   border-radius: 14px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
-
 .db-icon-blue {
   background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
   color: #1d4ed8;
@@ -407,29 +395,24 @@
   background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
   color: #7e22ce;
 }
-
 .db-factor-content {
   flex: 1;
 }
-
 .db-factor-content-full {
   width: 100%;
 }
-
 .db-factor-content h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.15rem;
   font-weight: 700;
   color: #1e293b;
 }
-
 .db-factor-content p {
   margin: 0;
   color: #475569;
   font-size: 0.95rem;
   line-height: 1.6;
 }
-
 .db-action-text {
   display: inline-block;
   margin-top: 0.75rem;
@@ -440,13 +423,11 @@
   border-radius: 8px;
   border: 1px solid #ffedd5;
 }
-
 .db-factor-list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-
 .db-factor-list li {
   display: flex;
   justify-content: space-between;
@@ -455,23 +436,20 @@
   font-size: 0.95rem;
   color: #334155;
 }
-
 .db-factor-list li:last-child {
   border-bottom: none;
 }
-
 .db-risk-rose {
   color: #e11d48;
   font-weight: 600;
 }
-
 .db-risk-orange {
   color: #ea580c;
   font-weight: 600;
 }
 
 /* ========================================================= */
-/* --- UPDATED: Visual Schedule Timeline (Drag & Drop) --- */
+/* --- Monthly Visual AI Scheduler (Grid View) --- */
 /* ========================================================= */
 .db-dnd-container {
   display: flex;
@@ -479,25 +457,31 @@
   align-items: stretch;
 }
 
-/* Sidebar สำหรับรายชื่อหมอ */
+/* Sidebar */
 .db-dnd-sidebar {
-  width: 250px;
-  min-width: 250px;
+  width: 230px;
+  min-width: 230px;
   background: #f8fafc;
-  border-right: 1px solid #e2e8f0;
   border-radius: 12px;
   padding: 1.25rem;
   border: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 .db-dnd-sidebar-title {
   font-size: 1rem;
   font-weight: 700;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.db-dnd-nurse-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .db-dnd-doctor-card {
@@ -518,197 +502,349 @@
   cursor: grabbing;
   transform: scale(0.98);
 }
-
 .db-dnd-doctor-card:hover {
-  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.1);
-  border-color: #bfdbfe;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
-
 .db-dnd-doc-name {
   font-weight: 700;
   color: #0f172a;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-
-.db-dnd-doc-spec {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-top: 4px;
+.db-badge-level {
+  background: #e2e8f0;
+  color: #334155;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: fit-content;
 }
 
-/* Calendar Area */
-.db-visual-schedule-wrapper {
+/* Grid Calendar */
+.db-mc-wrapper {
   flex: 1;
-  min-width: 0;
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-}
-
-.db-vs-header {
   display: flex;
+  flex-direction: column;
+}
+
+.db-mc-grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f8fafc;
   border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
-  position: sticky;
-  top: 0;
-  z-index: 20;
 }
 
-.db-vs-time-spacer {
-  width: 70px;
-  min-width: 70px;
-  border-right: 1px solid #e2e8f0;
-  background: #f8fafc;
-}
-
-.db-vs-person-col-header {
-  flex: 1;
-  min-width: 100px;
-  padding: 12px 10px;
+.db-mc-header-col {
+  padding: 10px;
   text-align: center;
-  border-right: 1px solid #e2e8f0;
   font-weight: 700;
-  color: #1e293b;
-  font-size: 0.95rem;
+  color: #475569;
+  font-size: 0.85rem;
+  border-right: 1px solid #e2e8f0;
+}
+.db-mc-header-col:last-child {
+  border-right: none;
+}
+
+.db-mc-grid-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #e2e8f0; /* Grid lines color */
+  gap: 1px; /* Grid lines thickness */
+}
+
+.db-mc-cell {
+  background: white;
+  min-height: 120px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.db-mc-cell.today {
+  background: #f0f9ff; /* Highlight current day background */
+}
+
+.db-mc-date {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  text-align: right;
+  margin-bottom: 4px;
+  padding-right: 4px;
+  padding-top: 4px;
+}
+
+.db-mc-date.today {
+  color: #2563eb; /* Highlight current day text */
+  font-weight: 800;
+}
+
+.db-mc-events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+/* Event Pills inside Grid */
+.db-mc-pill {
+  font-size: 0.65rem;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: transform 0.1s;
+}
+
+.db-mc-pill:hover {
+  transform: scale(1.02);
+}
+
+.db-mc-pill-title {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.db-mc-pill-desc {
+  font-size: 0.6rem;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- Color Palette based on Ward & Level --- */
+
+/* ER Level 4 (Dark Blue) */
+.bg-er-l4 {
+  background: #1e3a8a;
+  color: white;
+}
+.border-er-l4 {
+  border: 1px dashed #1e3a8a;
+  color: #1e3a8a;
+  background: #eff6ff;
+}
+.l-border-er-l4 {
+  border-left: 4px solid #1e3a8a;
+}
+
+/* ER Level 3 (Light Blue) */
+.bg-er-l3 {
+  background: #3b82f6;
+  color: white;
+}
+.border-er-l3 {
+  border: 1px dashed #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+.l-border-er-l3 {
+  border-left: 4px solid #3b82f6;
+}
+
+/* ICU Level 4 (Dark Purple) */
+.bg-icu-l4 {
+  background: #581c87;
+  color: white;
+}
+.border-icu-l4 {
+  border: 1px dashed #581c87;
+  color: #581c87;
+  background: #faf5ff;
+}
+.l-border-icu-l4 {
+  border-left: 4px solid #581c87;
+}
+
+/* ICU Level 3 (Light Purple) */
+.bg-icu-l3 {
+  background: #9333ea;
+  color: white;
+}
+.border-icu-l3 {
+  border: 1px dashed #9333ea;
+  color: #9333ea;
+  background: #faf5ff;
+}
+.l-border-icu-l3 {
+  border-left: 4px solid #9333ea;
+}
+
+/* OPD Level 3 (Teal) */
+.bg-opd-l3 {
+  background: #0d9488;
+  color: white;
+}
+.border-opd-l3 {
+  border: 1px dashed #0d9488;
+  color: #0d9488;
+  background: #f0fdfa;
+}
+.l-border-opd-l3 {
+  border-left: 4px solid #0d9488;
+}
+
+/* OPD Part-time (Green) */
+.bg-opd-pt {
+  background: #10b981;
+  color: white;
+}
+.border-opd-pt {
+  border: 1px dashed #10b981;
+  color: #10b981;
+  background: #ecfdf5;
+}
+.l-border-opd-pt {
+  border-left: 4px solid #10b981;
+}
+
+.default {
+  background: #cbd5e1;
+  color: #334155;
+}
+
+/* ========================================================= */
+/* --- Nurse Detail Overlay Panel --- */
+/* ========================================================= */
+.db-nurse-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.db-nurse-panel-content {
+  width: 350px;
+  background: white;
+  height: 100%;
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+  animation: slideInRight 0.3s ease forwards;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.db-np-header {
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.db-np-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px;
+}
+
+.db-np-close-btn:hover {
+  color: #ef4444;
+}
+
+.db-np-body {
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
 }
 
-.db-vs-person-col-header:last-child {
-  border-right: none;
-}
-
-.db-vs-body {
+.db-np-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #f1f5f9;
   display: flex;
-  max-height: 500px; /* จำกัดความสูงให้มี Scroll bar ภายใน */
-  overflow-y: auto;
-  position: relative;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+  border: 2px solid #e2e8f0;
 }
 
-.db-vs-time-axis {
-  width: 70px;
-  min-width: 70px;
-  background: #fff;
-  border-right: 1px solid #e2e8f0;
-  position: relative;
+.db-np-name {
+  margin: 0 0 10px 0;
+  font-size: 1.25rem;
+  color: #0f172a;
+  text-align: center;
 }
 
-.db-vs-time-slot {
-  height: 60px; /* 1 ชั่วโมง = 60px */
-  position: relative;
+.db-np-badge-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 25px;
+  align-items: center;
 }
 
-.db-vs-time-text {
-  position: absolute;
-  top: -10px;
-  right: 10px;
+.db-np-ward-badge {
   font-size: 0.75rem;
+  font-weight: bold;
   color: #64748b;
+  background: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.db-np-info-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.db-np-info-item {
+  background: #f8fafc;
+  padding: 12px 15px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+}
+
+.db-np-label {
+  color: #64748b;
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
-.db-vs-grid-columns {
-  display: flex;
-  flex: 1;
-  position: relative;
-}
-
-.db-vs-person-col {
-  flex: 1;
-  min-width: 100px;
-  border-right: 1px solid #e2e8f0;
-  position: relative;
-  /* สร้างเส้นตารางแนวนอนทุกๆ 60px */
-  background-image: linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
-  background-size: 100% 60px;
-  transition: background 0.2s;
-}
-
-.db-vs-person-col:hover {
-  background-color: #f8fafc;
-}
-
-.db-vs-person-col:last-child {
-  border-right: none;
-}
-
-.db-vs-event-block {
-  position: absolute;
-  left: 6px;
-  right: 6px;
-  border-radius: 6px;
-  padding: 8px;
-  color: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: transform 0.2s;
-  cursor: pointer;
-  z-index: 10;
-}
-
-.db-vs-event-block:hover {
-  transform: scale(1.02);
-  z-index: 15;
-}
-
-.db-vs-event-title {
+.db-np-value {
+  color: #0f172a;
   font-weight: 700;
-  font-size: 0.85rem;
-  margin-bottom: 2px;
+  font-size: 0.95rem;
 }
 
-.db-vs-event-desc {
-  font-size: 0.75rem;
-  opacity: 0.9;
+.text-danger {
+  color: #ef4444;
 }
-
-/* สีเหมือนในรูปตัวอย่าง */
-.db-vs-bg-day {
-  background: #0ea5e9;
-  border-left: 4px solid #0369a1;
-}
-
-.db-vs-bg-night {
-  background: #8b5cf6;
-  border-left: 4px solid #5b21b6;
-}
-
-.db-vs-bg-purple {
-  background: #d946ef;
-  border-left: 4px solid #a21caf;
-}
-
-.db-vs-bg-green {
-  background: #10b981;
-  border-left: 4px solid #047857;
-}
-
-/* เส้นสีแดงบอกเวลาปัจจุบัน */
-.db-vs-current-time-line {
-  position: absolute;
-  left: 70px; /* เริ่มจากขอบแกนเวลา */
-  right: 0;
-  height: 2px;
-  background: #ef4444;
-  z-index: 20;
-  pointer-events: none;
-}
-
-.db-vs-current-time-dot {
-  position: absolute;
-  left: 66px;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #ef4444;
-  transform: translateY(-4px);
-  z-index: 20;
-  pointer-events: none;
+.text-success {
+  color: #10b981;
 }
