@@ -29,6 +29,9 @@ import {
   ShieldAlert,
   X,
   Info,
+  Save,
+  FileText,
+  Database,
 } from "lucide-react";
 
 import "./style/Dashboard.css"; // Ensure this path matches your folder structure
@@ -43,8 +46,11 @@ export default function Dashboard() {
   const [erChartData, setErChartData] = useState([]);
 
   const [uploadStatus, setUploadStatus] = useState(null);
-
   const [selectedNurse, setSelectedNurse] = useState(null);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const [staffingData, setStaffingData] = useState([
     {
@@ -81,54 +87,9 @@ export default function Dashboard() {
     },
   ]);
 
-  const [nurseSchedule, setNurseSchedule] = useState([
-    {
-      id: 1,
-      name: "RN. Orawan Jaidee",
-      ward: "ER",
-      shiftType: "Day",
-      time: "08:00 - 16:00",
-      hours: 8,
-    },
-    {
-      id: 2,
-      name: "RN. Somchai Mungmun",
-      ward: "ER",
-      shiftType: "Night",
-      time: "16:00 - 00:00",
-      hours: 8,
-    },
-    {
-      id: 3,
-      name: "RN. Wipada Raksa",
-      ward: "ICU",
-      shiftType: "Day",
-      time: "08:00 - 20:00",
-      hours: 12,
-    },
-    {
-      id: 4,
-      name: "RN. Nipa Aree",
-      ward: "OPD",
-      shiftType: "Day",
-      time: "08:00 - 16:00",
-      hours: 8,
-    },
-    {
-      id: 5,
-      name: "RN. Kittipong Kengkat",
-      ward: "ER",
-      shiftType: "Night",
-      time: "00:00 - 08:00",
-      hours: 8,
-    },
-  ]);
+  const [nurseSchedule, setNurseSchedule] = useState([]);
 
   const [isLoading, setIsLoading] = useState(true);
-
-  // ==========================================
-  // Drag & Drop Monthly Grid Calendar Setup
-  // ==========================================
   const [selectedWard, setSelectedWard] = useState("All");
 
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -137,87 +98,27 @@ export default function Dashboard() {
 
   const getStyleClass = (ward, level, isFilled) => {
     let base = "default";
-    if (ward === "ER" && level === "Level 4") base = "er-l4";
-    else if (ward === "ER" && level === "Level 3") base = "er-l3";
-    else if (ward === "ICU" && level === "Level 4") base = "icu-l4";
-    else if (ward === "ICU" && level === "Level 3") base = "icu-l3";
-    else if (ward === "OPD" && level === "Level 3") base = "opd-l3";
-    else if (ward === "OPD" && level === "Part-time") base = "opd-pt";
+
+    // ทำความสะอาด level เผื่อกรณีข้อมูลจากหลังบ้านเป็น "RN Level4"
+    const cleanLevel = level
+      ? level.toString().toLowerCase().replace(/rn/g, "").replace(/\s+/g, "")
+      : "";
+
+    if (ward === "ER" && cleanLevel === "level4") base = "er-l4";
+    else if (ward === "ER" && cleanLevel === "level3") base = "er-l3";
+    else if (ward === "ICU" && cleanLevel === "level4") base = "icu-l4";
+    else if (ward === "ICU" && cleanLevel === "level3") base = "icu-l3";
+    else if (ward === "OPD" && cleanLevel === "level3") base = "opd-l3";
+    else if (ward === "OPD" && cleanLevel === "part-time") base = "opd-pt";
 
     return isFilled ? `bg-${base}` : `border-${base}`;
   };
 
-  // Any nurse can work Day or Night. Tracked by dayHours and nightHours.
-  const [nursesList] = useState([
-    {
-      id: "n1",
-      name: "RN. Orawan",
-      level: "Level 4",
-      maxHours: 12,
-      ward: "ER",
-      dayHours: 80,
-      nightHours: 64,
-    },
-    {
-      id: "n2",
-      name: "RN. Somchai",
-      level: "Level 3",
-      maxHours: 12,
-      ward: "ER",
-      dayHours: 40,
-      nightHours: 80,
-    },
-    {
-      id: "n3",
-      name: "RN. Wipada",
-      level: "Level 3",
-      maxHours: 12,
-      ward: "ICU",
-      dayHours: 96,
-      nightHours: 0,
-    },
-    {
-      id: "n4",
-      name: "RN. Nipa",
-      level: "Part-time",
-      maxHours: 8,
-      ward: "OPD",
-      dayHours: 48,
-      nightHours: 0,
-    },
-    {
-      id: "n5",
-      name: "RN. Kittipong",
-      level: "Level 4",
-      maxHours: 12,
-      ward: "ER",
-      dayHours: 60,
-      nightHours: 100,
-    },
-    {
-      id: "n6",
-      name: "RN. Somsri",
-      level: "Level 4",
-      maxHours: 12,
-      ward: "ICU",
-      dayHours: 90,
-      nightHours: 90,
-    },
-    {
-      id: "n7",
-      name: "RN. Malee",
-      level: "Level 3",
-      maxHours: 12,
-      ward: "OPD",
-      dayHours: 60,
-      nightHours: 50,
-    },
-  ]);
+  const [nursesList, setNursesList] = useState([]);
 
   const generateMonthlyRequirements = () => {
     let reqs = [];
     const wards = ["ER", "ICU", "OPD"];
-
     monthDays.forEach((day) => {
       wards.forEach((ward) => {
         if (ward === "ER") {
@@ -302,7 +203,6 @@ export default function Dashboard() {
   const handleDragStart = (e, nurseId) => {
     e.dataTransfer.setData("nurseId", nurseId);
   };
-
   const handleDragOver = (e) => {
     e.preventDefault();
   };
@@ -317,8 +217,21 @@ export default function Dashboard() {
 
     if (!nurse || !req) return;
 
-    // Validation Rules (Shift type restriction removed, anyone can work Day or Night)
-    if (nurse.level !== req.reqLevel) {
+    // === แก้ไขจุดนี้: ทำความสะอาดข้อความก่อนเทียบกัน ===
+    // 1. เปลี่ยนเป็นตัวเล็กทั้งหมด
+    // 2. ลบคำว่า 'rn'
+    // 3. ลบช่องว่างออกทั้งหมด
+    // ผลลัพธ์: "RN Level4" -> "level4" | "Level 4" -> "level4"
+    const safeNurseLevel = nurse.level
+      .toLowerCase()
+      .replace(/rn/g, "")
+      .replace(/\s+/g, "");
+    const safeReqLevel = req.reqLevel
+      .toLowerCase()
+      .replace(/rn/g, "")
+      .replace(/\s+/g, "");
+
+    if (safeNurseLevel !== safeReqLevel) {
       alert(
         `Error: This slot requires a ${req.reqLevel} nurse. Selected nurse is ${nurse.level}.`,
       );
@@ -346,17 +259,94 @@ export default function Dashboard() {
     (n) => selectedWard === "All" || n.ward === selectedWard,
   );
 
-  // ==========================================
+  const handleSaveSchedule = () => {
+    setIsSaving(true);
+    setSaveMessage(null);
+    const assignedShifts = shiftRequirements
+      .filter((req) => req.filledBy !== null)
+      .map((req) => {
+        const dateString = `2026-03-${req.day.toString().padStart(2, "0")}`;
+        return {
+          employee_id: req.filledBy,
+          date: dateString,
+          ward: req.ward,
+          shift_type: req.reqShift,
+          start_hour: req.startHour,
+          duration_hours: req.duration,
+        };
+      });
+    const payload = { action: "assign_shift", data: assignedShifts };
+    console.log(
+      "Sending Schedule Payload to Backend API:",
+      JSON.stringify(payload, null, 2),
+    );
 
-  const handleFileUpload = async (event) => {
+    setTimeout(() => {
+      setIsSaving(false);
+      setSaveMessage("Schedule successfully saved to database.");
+      setTimeout(() => setSaveMessage(null), 4000);
+    }, 1500);
+  };
+
+  const handleFileUpload = async (event, uploadType) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    setUploadStatus("Uploading...");
-    setTimeout(() => {
-      setUploadStatus("Schedule Updated Successfully!");
-      setTimeout(() => setUploadStatus(null), 3000);
-    }, 1500);
+    setShowUploadModal(false);
+    setUploadStatus(
+      `Uploading & Analyzing ${uploadType === "roster" ? "Nurse Roster" : "Patient Data"}...`,
+    );
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_type", uploadType);
+
+    try {
+      const API_BASE_URL =
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+      const response = await axios.post(
+        `${API_BASE_URL}/api/v1/er/upload-data`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+
+      if (response.data.status === "success") {
+        setUploadStatus("Data Saved & AI Updated!");
+
+        if (
+          response.data.recommendations &&
+          response.data.recommendations.length > 0
+        ) {
+          setStaffingData((prev) => {
+            const newData = [...prev];
+            newData[0] = response.data.recommendations[0];
+            newData[1] = response.data.recommendations[1];
+            return newData;
+          });
+        }
+
+        if (response.data.nurses && response.data.nurses.length > 0) {
+          setNursesList(response.data.nurses);
+        }
+
+        if (response.data.chart_data && response.data.chart_data.length > 0) {
+          setErChartData(response.data.chart_data);
+          const peak = response.data.chart_data.reduce(
+            (max, current) => (current.load > max.load ? current : max),
+            response.data.chart_data[0],
+          );
+          setErPeakHour(peak.hour);
+        }
+
+        if (response.data.detailed_schedule) {
+          setNurseSchedule(response.data.detailed_schedule);
+        }
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setUploadStatus("Error processing file.");
+    }
+    setTimeout(() => setUploadStatus(null), 4000);
   };
 
   useEffect(() => {
@@ -373,31 +363,49 @@ export default function Dashboard() {
 
         setIcuOccupancy(icuRes.data.data.occupancy_rate);
         setDengueRisk(icuRes.data.data.risk_level);
-
-        const formattedOpdData = opdRes.data.data.map((item) => ({
-          date: item.date,
-          actual: null,
-          predicted: item.volume,
-        }));
-        const combinedOpdData = [
+        setOpdForecastData([
           { date: "Day 0", actual: 1450, predicted: 1400 },
-          ...formattedOpdData,
-        ];
-        setOpdForecastData(combinedOpdData);
+          ...opdRes.data.data.map((item) => ({
+            date: item.date,
+            actual: null,
+            predicted: item.volume,
+          })),
+        ]);
 
         setErCurrentLoad(erRes.data.data.current_load);
         setErPeakHour(erRes.data.data.peak_hour);
+        if (
+          erRes.data.data.chart_data &&
+          erRes.data.data.chart_data.length > 0
+        ) {
+          setErChartData(erRes.data.data.chart_data);
+        } else {
+          setErChartData([
+            { hour: "08:00", load: 40 },
+            { hour: "10:00", load: 65 },
+            { hour: "12:00", load: 85 },
+            { hour: "14:00", load: 70 },
+            { hour: "16:00", load: 90 },
+            { hour: "18:00", load: 110 },
+            { hour: "20:00", load: 80 },
+          ]);
+        }
 
-        const defaultErChart = [
-          { hour: "08:00", load: 40 },
-          { hour: "10:00", load: 65 },
-          { hour: "12:00", load: 85 },
-          { hour: "14:00", load: 70 },
-          { hour: "16:00", load: 90 },
-          { hour: "18:00", load: 110 },
-          { hour: "20:00", load: 80 },
-        ];
-        setErChartData(erRes.data.data.chart_data || defaultErChart);
+        if (
+          erRes.data.data.recommendations &&
+          erRes.data.data.recommendations.length > 0
+        ) {
+          setStaffingData((prev) => {
+            const newData = [...prev];
+            newData[0] = erRes.data.data.recommendations[0];
+            newData[1] = erRes.data.data.recommendations[1];
+            return newData;
+          });
+        }
+
+        if (erRes.data.data.detailed_schedule) {
+          setNurseSchedule(erRes.data.data.detailed_schedule);
+        }
 
         setIsLoading(false);
       } catch (error) {
@@ -411,6 +419,144 @@ export default function Dashboard() {
 
   return (
     <div className="db-container">
+      {/* === Upload Selection Modal === */}
+      {showUploadModal && (
+        <div
+          className="db-nurse-panel-overlay"
+          onClick={() => setShowUploadModal(false)}
+          style={{ justifyContent: "center", alignItems: "center" }}
+        >
+          <div
+            className="db-nurse-panel-content"
+            style={{
+              height: "auto",
+              borderRadius: "16px",
+              margin: "auto",
+              width: "420px",
+              paddingBottom: "20px",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="db-np-header">
+              <h3 style={{ margin: 0, color: "#1e293b", fontSize: "1.2rem" }}>
+                Select Data to Upload
+              </h3>
+              <button
+                className="db-np-close-btn"
+                onClick={() => setShowUploadModal(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div
+              className="db-np-body"
+              style={{
+                gap: "15px",
+                padding: "20px",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <label
+                className="db-upload-option-card"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "15px",
+                  padding: "15px",
+                  border: "2px dashed #cbd5e1",
+                  borderRadius: "12px",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  background: "#f8fafc",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.borderColor = "#3b82f6";
+                  e.currentTarget.style.background = "#eff6ff";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                  e.currentTarget.style.background = "#f8fafc";
+                }}
+              >
+                <FileText size={36} color="#3b82f6" />
+                <div
+                  className="db-option-text"
+                  style={{ display: "flex", flexDirection: "column" }}
+                >
+                  <strong
+                    style={{
+                      color: "#0f172a",
+                      fontSize: "1.05rem",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Nurse Roster (Excel)
+                  </strong>
+                  <span style={{ color: "#64748b", fontSize: "0.85rem" }}>
+                    Upload the monthly shift roster layout.
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  hidden
+                  accept=".xlsx, .xls"
+                  onChange={(e) => handleFileUpload(e, "roster")}
+                />
+              </label>
+
+              <label
+                className="db-upload-option-card"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "15px",
+                  padding: "15px",
+                  border: "2px dashed #cbd5e1",
+                  borderRadius: "12px",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  background: "#f8fafc",
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.borderColor = "#f43f5e";
+                  e.currentTarget.style.background = "#fff1f2";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.borderColor = "#cbd5e1";
+                  e.currentTarget.style.background = "#f8fafc";
+                }}
+              >
+                <Database size={36} color="#f43f5e" />
+                <div
+                  className="db-option-text"
+                  style={{ display: "flex", flexDirection: "column" }}
+                >
+                  <strong
+                    style={{
+                      color: "#0f172a",
+                      fontSize: "1.05rem",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    ER Patient Load (CSV)
+                  </strong>
+                  <span style={{ color: "#64748b", fontSize: "0.85rem" }}>
+                    Upload hourly patient volume history.
+                  </span>
+                </div>
+                <input
+                  type="file"
+                  hidden
+                  accept=".csv"
+                  onChange={(e) => handleFileUpload(e, "patient_load")}
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Overlay Panel for Nurse Details */}
       {selectedNurse && (
         <div
@@ -444,7 +590,6 @@ export default function Dashboard() {
                 <span className="db-badge-level">{selectedNurse.level}</span>
                 <span className="db-np-ward-badge">{selectedNurse.ward}</span>
               </div>
-
               <div className="db-np-info-grid">
                 <div className="db-np-info-item">
                   <span className="db-np-label">Max Hours / Shift</span>
@@ -515,18 +660,25 @@ export default function Dashboard() {
             {uploadStatus && (
               <span className="db-upload-status">{uploadStatus}</span>
             )}
-            <label htmlFor="schedule-upload" className="db-upload-btn">
-              <Upload size={18} /> Upload Schedule
-            </label>
-            <input
-              type="file"
-              id="schedule-upload"
-              style={{ display: "none" }}
-              accept=".csv, .xlsx"
-              onChange={handleFileUpload}
-            />
+            <button
+              className="db-upload-btn"
+              onClick={() => setShowUploadModal(true)}
+              style={{
+                background: "#3b82f6",
+                color: "white",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                fontWeight: "600",
+                cursor: "pointer",
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              <Upload size={18} /> Upload Data
+            </button>
           </div>
-
           <div className="db-location-wrapper">
             <MapPin size={16} className="db-map-icon" />
             Ban Khlong Suan, Samut Prakan
@@ -541,7 +693,6 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          {/* Key Metrics Cards */}
           <div className="db-metrics-grid">
             <div className="db-card db-card-blue">
               <div className="db-card-title">
@@ -551,7 +702,6 @@ export default function Dashboard() {
                 1,450 <span className="db-trend-up">+ 5%</span>
               </div>
             </div>
-
             <div className="db-card db-card-rose">
               <div className="db-card-title">
                 <Activity size={20} color="#e11d48" /> ER Load (Current)
@@ -561,7 +711,6 @@ export default function Dashboard() {
                 <span className="db-er-peak-text">Peak at {erPeakHour}</span>
               </div>
             </div>
-
             <div className="db-card db-card-purple">
               <div className="db-card-title">
                 <Bed size={20} color="#9333ea" /> ICU Occupancy
@@ -571,7 +720,6 @@ export default function Dashboard() {
                 <span className="db-trend-down">2 Beds Left</span>
               </div>
             </div>
-
             <div className="db-card db-card-orange">
               <div className="db-card-title">
                 <AlertTriangle size={20} color="#ea580c" /> Dengue Risk
@@ -580,12 +728,11 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Charts Section */}
           <div className="db-charts-grid">
             <div className="db-chart-card">
               <div className="db-chart-header">
-                <span className="db-dot db-dot-blue"></span>
-                7-Day OPD Volume Forecast (AI Model)
+                <span className="db-dot db-dot-blue"></span>7-Day OPD Volume
+                Forecast (AI Model)
               </div>
               <div className="db-chart-wrapper">
                 <ResponsiveContainer width="100%" height="100%">
@@ -670,8 +817,8 @@ export default function Dashboard() {
 
             <div className="db-chart-card">
               <div className="db-chart-header">
-                <span className="db-dot db-dot-rose"></span>
-                Hourly ER Load Prediction
+                <span className="db-dot db-dot-rose"></span>Hourly ER Load
+                Prediction
               </div>
               <div className="db-chart-wrapper">
                 <ResponsiveContainer width="100%" height="100%">
@@ -735,7 +882,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Staffing Recommendation Table */}
           <div className="db-staffing-card">
             <div className="db-staffing-header">
               <div className="db-staffing-header-left">
@@ -780,14 +926,16 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Detailed Nurse Shift Schedule */}
+          {/* ======================================================= */}
+          {/* Detailed Nurse Shift Schedule (AI Auto-Scheduled)       */}
+          {/* ======================================================= */}
           <div
             className="db-staffing-card"
             style={{ marginTop: "1.5rem", marginBottom: "2rem" }}
           >
             <div className="db-staffing-header">
               <Clock size={22} color="#9333ea" />
-              <h2>Detailed Nurse Shift Schedule</h2>
+              <h2>Detailed Nurse Shift Schedule (AI Auto-Scheduled)</h2>
             </div>
             <div className="db-table-responsive">
               <table className="db-staffing-table">
@@ -801,87 +949,104 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {nurseSchedule.map((staff) => (
-                    <tr key={staff.id}>
-                      <td className="td-bold">
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                          }}
-                        >
-                          <UserCheck size={16} color="#475569" />
-                          {staff.name}
-                        </div>
-                      </td>
-                      <td>{staff.ward}</td>
-                      <td>
-                        {staff.shiftType === "Day" ? (
-                          <span
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px",
-                              color: "#d97706",
-                              fontWeight: 600,
-                            }}
-                          >
-                            <Sun size={18} color="#eab308" /> Day Shift
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "6px",
-                              color: "#4338ca",
-                              fontWeight: 600,
-                            }}
-                          >
-                            <Moon size={18} color="#6366f1" /> Night Shift
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ color: "#475569", fontWeight: 500 }}>
-                        {staff.time}
-                      </td>
-                      <td>
-                        <strong
-                          style={{ fontSize: "1.1rem", color: "#0f172a" }}
-                        >
-                          {staff.hours}
-                        </strong>
-                        <span
-                          style={{
-                            fontSize: "0.85rem",
-                            color: "#64748b",
-                            marginLeft: "4px",
-                          }}
-                        >
-                          hrs
-                        </span>
+                  {nurseSchedule.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan="5"
+                        style={{
+                          textAlign: "center",
+                          padding: "20px",
+                          color: "#64748b",
+                        }}
+                      >
+                        No active schedule found. Please upload data.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    nurseSchedule.map((staff, idx) => (
+                      <tr key={idx}>
+                        <td className="td-bold">
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            <UserCheck size={16} color="#475569" />
+                            {staff.name}
+                          </div>
+                        </td>
+                        <td>{staff.ward}</td>
+                        <td>
+                          {staff.shiftType === "Day" ? (
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                color: "#d97706",
+                                fontWeight: 600,
+                              }}
+                            >
+                              <Sun size={18} color="#eab308" /> Day Shift
+                            </span>
+                          ) : (
+                            <span
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                color: "#4338ca",
+                                fontWeight: 600,
+                              }}
+                            >
+                              <Moon size={18} color="#6366f1" /> Night Shift
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ color: "#475569", fontWeight: 500 }}>
+                          {staff.time}
+                        </td>
+                        <td>
+                          <strong
+                            style={{ fontSize: "1.1rem", color: "#0f172a" }}
+                          >
+                            {staff.hours}
+                          </strong>
+                          <span
+                            style={{
+                              fontSize: "0.85rem",
+                              color: "#64748b",
+                              marginLeft: "4px",
+                            }}
+                          >
+                            hrs
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* ======================================================= */}
-          {/* Monthly Visual AI Scheduler (Grid View) */}
-          {/* ======================================================= */}
           <div
             className="db-staffing-card"
             style={{ marginTop: "1.5rem", marginBottom: "2rem" }}
           >
-            <div className="db-staffing-header">
-              <div className="db-staffing-header-left">
+            <div
+              className="db-staffing-header"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <div className="db-staffing-header-left" style={{ flex: 1 }}>
                 <Calendar size={22} color="#f43f5e" />
                 <h2>Monthly Ward Scheduling (AI Recommendations)</h2>
-
-                {/* Dropdown Filter */}
                 <select
                   value={selectedWard}
                   onChange={(e) => setSelectedWard(e.target.value)}
@@ -893,14 +1058,47 @@ export default function Dashboard() {
                   <option value="OPD">OPD Unit</option>
                 </select>
               </div>
-              <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
-                Drag a matching nurse onto the dashed AI slots. Click on a nurse
-                to view details.
-              </span>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "15px" }}
+              >
+                <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
+                  Drag a matching nurse onto the dashed AI slots.
+                </span>
+                <button
+                  onClick={handleSaveSchedule}
+                  disabled={isSaving}
+                  style={{
+                    background: "#10b981",
+                    color: "white",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "8px",
+                    fontWeight: "600",
+                    cursor: isSaving ? "not-allowed" : "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    opacity: isSaving ? 0.7 : 1,
+                    transition: "background 0.2s",
+                  }}
+                >
+                  <Save size={16} /> {isSaving ? "Saving..." : "Save Schedule"}
+                </button>
+                {saveMessage && (
+                  <span
+                    style={{
+                      color: "#10b981",
+                      fontSize: "0.85rem",
+                      fontWeight: "600",
+                    }}
+                  >
+                    {saveMessage}
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="db-dnd-container">
-              {/* Sidebar: Available Nurses (Filtered) */}
               <div className="db-dnd-sidebar">
                 <div className="db-dnd-sidebar-title">Available Nurses</div>
                 <div className="db-dnd-nurse-list">
@@ -967,15 +1165,13 @@ export default function Dashboard() {
                         marginTop: "20px",
                       }}
                     >
-                      No nurses available.
+                      No nurses available. Please upload a schedule.
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Grid Calendar Area */}
               <div className="db-mc-wrapper">
-                {/* Days of week header */}
                 <div className="db-mc-grid-header">
                   {daysOfWeek.map((d) => (
                     <div key={d} className="db-mc-header-col">
@@ -983,12 +1179,9 @@ export default function Dashboard() {
                     </div>
                   ))}
                 </div>
-
-                {/* Days grid body */}
                 <div className="db-mc-grid-body">
                   {monthDays.map((day) => {
                     const isToday = day === currentDay;
-
                     return (
                       <div
                         key={day}
@@ -997,7 +1190,6 @@ export default function Dashboard() {
                         <div className={`db-mc-date ${isToday ? "today" : ""}`}>
                           {day}
                         </div>
-
                         <div className="db-mc-events">
                           {shiftRequirements
                             .filter(
@@ -1016,7 +1208,6 @@ export default function Dashboard() {
                                 req.reqLevel,
                                 isFilled,
                               );
-
                               return (
                                 <div
                                   key={req.id}
@@ -1074,7 +1265,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* External Factors Section */}
           <div className="db-factors-grid">
             <div className="db-factor-card">
               <div className="db-icon-box db-icon-blue">
