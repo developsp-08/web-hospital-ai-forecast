@@ -7,7 +7,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        {/* version 1.0 */}
+        {/* version 2.0 */}
         {/* กำหนดให้หน้าแรก / วิ่งไปที่ Component Dashboard */}
         <Route path="/" element={<Dashboard />} />
 
