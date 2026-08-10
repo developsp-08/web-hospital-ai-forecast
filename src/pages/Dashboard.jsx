@@ -43,7 +43,20 @@ import {
   ChevronUp, // 🌟 เพิ่ม Icon สำหรับปุ่ม Collapse
   ToggleRight,
   Plus,
+  Edit3,
+  UserX,
+  Check,
+  Briefcase,
 } from "lucide-react";
+
+const NURSE_LEVELS = [
+  "RN Level 1",
+  "RN Level 2",
+  "RN Level 3",
+  "RN Level 4",
+  "Part-time",
+  "HOD",
+];
 
 import "./style/Dashboard.css";
 
@@ -58,6 +71,8 @@ export default function Dashboard() {
   const [staffingData, setStaffingData] = useState([]);
   const [nurseSchedule, setNurseSchedule] = useState([]);
   const [llmExplanation, setLlmExplanation] = useState("");
+  const [patientForecast, setPatientForecast] = useState(null);
+  const [fteInfo, setFteInfo] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [selectedWard, setSelectedWard] = useState("ER");
@@ -106,32 +121,207 @@ export default function Dashboard() {
   const [assignedShifts, setAssignedShifts] = useState([]);
   const [aiDrafts, setAiDrafts] = useState([]);
 
-  useEffect(() => {
+  // 🌟 Actual patient census (manual key-in, retroactive) — keyed by day number
+  const [actualCensus, setActualCensus] = useState({});
+  const [censusModalDay, setCensusModalDay] = useState(null);
+  const [censusDayInput, setCensusDayInput] = useState("");
+  const [censusNightInput, setCensusNightInput] = useState("");
+  const [isSavingCensus, setIsSavingCensus] = useState(false);
+
+  // 🌟 Nurse management (add / edit / deactivate)
+  const [showAddNurseModal, setShowAddNurseModal] = useState(false);
+  const [newNurseId, setNewNurseId] = useState("");
+  const [newNurseName, setNewNurseName] = useState("");
+  const [newNurseLevel, setNewNurseLevel] = useState("RN Level 1");
+  const [nurseFormError, setNurseFormError] = useState("");
+  const [isSavingNurse, setIsSavingNurse] = useState(false);
+  const [isEditingNurse, setIsEditingNurse] = useState(false);
+  const [editNurseName, setEditNurseName] = useState("");
+  const [editNurseLevel, setEditNurseLevel] = useState("");
+
+  // 🌟 Same rule set the CP-SAT optimizer uses, fetched from backend so drag-and-drop
+  // gets checked against one source of truth instead of a duplicated copy.
+  const [schedulingConfig, setSchedulingConfig] = useState({
+    MAX_CONSEC_DAY: 4,
+    MAX_CONSEC_NIGHT: 2,
+    WEEKLY_HOUR_CAP: 48,
+    SHIFT_HOURS: 8,
+  });
+
+  const fetchDashboardData = async () => {
     const API_BASE_URL =
       import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-    const fetchDashboardData = async () => {
-      try {
-        const erRes = await axios.get(`${API_BASE_URL}/api/v1/er/forecast`);
-        if (erRes.data.data.recommendations)
-          setStaffingData(erRes.data.data.recommendations);
-        if (erRes.data.data.detailed_schedule)
-          setNurseSchedule(erRes.data.data.detailed_schedule);
-        if (erRes.data.data.nurses) setNursesList(erRes.data.data.nurses);
-        if (erRes.data.data.saved_shifts)
-          setAssignedShifts(erRes.data.data.saved_shifts);
-        if (erRes.data.data.ai_draft) setAiDrafts(erRes.data.data.ai_draft);
-        if (erRes.data.data.llm_explanation)
-          setLlmExplanation(erRes.data.data.llm_explanation);
-        if (erRes.data.data.chart_data)
-          setErChartData(erRes.data.data.chart_data);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setIsLoading(false);
+    try {
+      const erRes = await axios.get(`${API_BASE_URL}/api/v1/er/forecast`);
+      if (erRes.data.data.recommendations)
+        setStaffingData(erRes.data.data.recommendations);
+      if (erRes.data.data.detailed_schedule)
+        setNurseSchedule(erRes.data.data.detailed_schedule);
+      if (erRes.data.data.nurses) setNursesList(erRes.data.data.nurses);
+      if (erRes.data.data.saved_shifts)
+        setAssignedShifts(erRes.data.data.saved_shifts);
+      if (erRes.data.data.ai_draft) setAiDrafts(erRes.data.data.ai_draft);
+      if (erRes.data.data.llm_explanation)
+        setLlmExplanation(erRes.data.data.llm_explanation);
+      if (erRes.data.data.chart_data)
+        setErChartData(erRes.data.data.chart_data);
+      if (erRes.data.data.patient_forecast)
+        setPatientForecast(erRes.data.data.patient_forecast);
+      if (erRes.data.data.fte_info) setFteInfo(erRes.data.data.fte_info);
+
+      const monthStr = `${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth() + 1).padStart(2, "0")}`;
+      const censusRes = await axios.get(
+        `${API_BASE_URL}/api/v1/er/actual-census`,
+        { params: { month: monthStr, ward: "ER" } },
+      );
+      if (censusRes.data.data) {
+        const byDay = {};
+        censusRes.data.data.forEach((row) => {
+          const day = parseInt(row.date.split("-")[2], 10);
+          byDay[day] = {
+            day_patients: row.day_patients,
+            night_patients: row.night_patients,
+          };
+        });
+        setActualCensus(byDay);
       }
-    };
+
+      const configRes = await axios.get(
+        `${API_BASE_URL}/api/v1/er/scheduling-config`,
+      );
+      if (configRes.data.data) setSchedulingConfig(configRes.data.data);
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const openCensusModal = (day) => {
+    const existing = actualCensus[day];
+    setCensusDayInput(existing?.day_patients ?? "");
+    setCensusNightInput(existing?.night_patients ?? "");
+    setCensusModalDay(day);
+  };
+
+  const handleSaveCensus = async () => {
+    if (censusModalDay === null) return;
+    setIsSavingCensus(true);
+    const API_BASE_URL =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+    const mm = String(nextMonthDate.getMonth() + 1).padStart(2, "0");
+    const yy = nextMonthDate.getFullYear();
+    const dateStr = `${yy}-${mm}-${String(censusModalDay).padStart(2, "0")}`;
+    try {
+      await axios.post(`${API_BASE_URL}/api/v1/er/actual-census`, {
+        date: dateStr,
+        ward: "ER",
+        day_patients: censusDayInput === "" ? null : parseInt(censusDayInput, 10),
+        night_patients:
+          censusNightInput === "" ? null : parseInt(censusNightInput, 10),
+      });
+      setActualCensus((prev) => ({
+        ...prev,
+        [censusModalDay]: {
+          day_patients: censusDayInput === "" ? null : parseInt(censusDayInput, 10),
+          night_patients:
+            censusNightInput === "" ? null : parseInt(censusNightInput, 10),
+        },
+      }));
+      setCensusModalDay(null);
+    } catch (error) {
+      console.error("Error saving actual census:", error);
+    }
+    setIsSavingCensus(false);
+  };
+
+  const handleAddNurse = async () => {
+    if (!newNurseId.trim() || !newNurseName.trim()) {
+      setNurseFormError("Please fill in Employee ID and Name.");
+      return;
+    }
+    setIsSavingNurse(true);
+    setNurseFormError("");
+    const API_BASE_URL =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+    try {
+      const res = await axios.post(`${API_BASE_URL}/api/v1/nurses`, {
+        employee_id: newNurseId.trim(),
+        name: newNurseName.trim(),
+        level: newNurseLevel,
+        ward: selectedWard === "All" ? "ER" : selectedWard,
+      });
+      if (res.data.status === "success") {
+        await fetchDashboardData();
+        setShowAddNurseModal(false);
+        setNewNurseId("");
+        setNewNurseName("");
+        setNewNurseLevel("RN Level 1");
+      } else {
+        setNurseFormError(res.data.message || "Failed to add nurse.");
+      }
+    } catch {
+      setNurseFormError("Connection failed.");
+    }
+    setIsSavingNurse(false);
+  };
+
+  const startEditNurse = () => {
+    if (!selectedNurse) return;
+    setEditNurseName(selectedNurse.name);
+    setEditNurseLevel(selectedNurse.level);
+    setIsEditingNurse(true);
+  };
+
+  const handleSaveNurseEdit = async () => {
+    if (!selectedNurse) return;
+    setIsSavingNurse(true);
+    const API_BASE_URL =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+    try {
+      await axios.put(`${API_BASE_URL}/api/v1/nurses/${selectedNurse.id}`, {
+        name: editNurseName,
+        level: editNurseLevel,
+      });
+      await fetchDashboardData();
+      setSelectedNurse((prev) =>
+        prev ? { ...prev, name: editNurseName, level: editNurseLevel } : prev,
+      );
+      setIsEditingNurse(false);
+    } catch (error) {
+      console.error("Error saving nurse edit:", error);
+    }
+    setIsSavingNurse(false);
+  };
+
+  const handleDeactivateNurse = async () => {
+    if (!selectedNurse) return;
+    if (
+      !window.confirm(
+        `Deactivate ${selectedNurse.name}? They'll be removed from the active scheduling pool, but past shift history is kept.`,
+      )
+    )
+      return;
+    const API_BASE_URL =
+      import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+    try {
+      await axios.patch(
+        `${API_BASE_URL}/api/v1/nurses/${selectedNurse.id}/status`,
+        { is_active: false },
+      );
+      await fetchDashboardData();
+      setSelectedNurse(null);
+      setIsEditingNurse(false);
+    } catch (error) {
+      console.error("Error deactivating nurse:", error);
+    }
+  };
 
   const handleDragStart = (e, nurseId, sourceAssignId = null) => {
     e.dataTransfer.setData("nurseId", nurseId);
@@ -140,11 +330,107 @@ export default function Dashboard() {
   };
   const handleDragOver = (e) => e.preventDefault();
 
+  // Same rules the CP-SAT optimizer enforces (H6/H7 hard, S1/S2/H8 soft from
+  // scheduling_config), checked here so manual drag-and-drop can't silently
+  // create a schedule the optimizer itself would never produce.
+  const validateAssignment = (nurseId, day, shiftType, excludeAssignId) => {
+    const cfg = schedulingConfig;
+    const others = assignedShifts.filter(
+      (a) => a.filledBy === nurseId && a.id !== excludeAssignId,
+    );
+
+    // H6: no double shift same day
+    const sameDayOther = others.find(
+      (a) => a.day === day && a.reqShift !== shiftType,
+    );
+    if (sameDayOther) {
+      return {
+        hardViolation: `This nurse is already on the ${sameDayOther.reqShift} shift on day ${day} — can't also work ${shiftType} the same day.`,
+        softViolations: [],
+      };
+    }
+
+    // H7: rest after night
+    if (
+      shiftType === "Day" &&
+      others.some((a) => a.day === day - 1 && a.reqShift === "Night")
+    ) {
+      return {
+        hardViolation: `This nurse worked Night shift on day ${day - 1} — needs rest before a Day shift on day ${day}.`,
+        softViolations: [],
+      };
+    }
+    if (
+      shiftType === "Night" &&
+      others.some((a) => a.day === day + 1 && a.reqShift === "Day")
+    ) {
+      return {
+        hardViolation: `This nurse is already on Day shift on day ${day + 1} — can't work Night on day ${day} right before it.`,
+        softViolations: [],
+      };
+    }
+
+    const softViolations = [];
+
+    // S1/S2: consecutive Day/Night streak, including this new one
+    const sameShiftDays = new Set(
+      others.filter((a) => a.reqShift === shiftType).map((a) => a.day),
+    );
+    sameShiftDays.add(day);
+    let start = day;
+    let end = day;
+    while (sameShiftDays.has(start - 1)) start--;
+    while (sameShiftDays.has(end + 1)) end++;
+    const streak = end - start + 1;
+    const maxConsec =
+      shiftType === "Day" ? cfg.MAX_CONSEC_DAY : cfg.MAX_CONSEC_NIGHT;
+    if (streak > maxConsec) {
+      softViolations.push(
+        `This would be ${streak} consecutive ${shiftType} shifts in a row (recommended max: ${maxConsec}).`,
+      );
+    }
+
+    // H8: weekly hour cap (same non-overlapping 7-day blocks the backend uses)
+    const weekStart = Math.floor((day - 1) / 7) * 7 + 1;
+    const weekEnd = weekStart + 6;
+    const hoursThisWeek =
+      others.filter((a) => a.day >= weekStart && a.day <= weekEnd).length *
+        cfg.SHIFT_HOURS +
+      cfg.SHIFT_HOURS;
+    if (hoursThisWeek > cfg.WEEKLY_HOUR_CAP) {
+      softViolations.push(
+        `This would bring the nurse to ${hoursThisWeek}h in this 7-day block (recommended cap: ${cfg.WEEKLY_HOUR_CAP}h).`,
+      );
+    }
+
+    return { hardViolation: null, softViolations };
+  };
+
   const handleDropToExisting = (e, targetAssignId) => {
     e.preventDefault();
     e.stopPropagation();
     const nurseId = e.dataTransfer.getData("nurseId");
     if (!nurseId) return;
+    const target = assignedShifts.find((a) => a.id === targetAssignId);
+    if (!target) return;
+
+    const { hardViolation, softViolations } = validateAssignment(
+      nurseId,
+      target.day,
+      target.reqShift,
+      targetAssignId,
+    );
+    if (hardViolation) {
+      alert(hardViolation);
+      return;
+    }
+    if (
+      softViolations.length > 0 &&
+      !window.confirm(`${softViolations.join("\n")}\n\nAssign anyway?`)
+    ) {
+      return;
+    }
+
     setAssignedShifts((prev) => {
       let newAssignments = [...prev];
       const targetIdx = newAssignments.findIndex(
@@ -164,6 +450,24 @@ export default function Dashboard() {
     const nurseId = e.dataTransfer.getData("nurseId");
     const sourceAssignId = e.dataTransfer.getData("sourceAssignId");
     if (!nurseId) return;
+
+    const { hardViolation, softViolations } = validateAssignment(
+      nurseId,
+      day,
+      shiftType,
+      sourceAssignId || null,
+    );
+    if (hardViolation) {
+      alert(hardViolation);
+      return;
+    }
+    if (
+      softViolations.length > 0 &&
+      !window.confirm(`${softViolations.join("\n")}\n\nAssign anyway?`)
+    ) {
+      return;
+    }
+
     setAssignedShifts((prev) => {
       let newAssignments = [...prev];
       if (sourceAssignId)
@@ -173,7 +477,7 @@ export default function Dashboard() {
         day,
         ward: selectedWard,
         startHour: shiftType === "Day" ? 8 : 16,
-        duration: 8,
+        duration: schedulingConfig.SHIFT_HOURS,
         reqShift: shiftType,
         filledBy: nurseId,
         isUserAssigned: true,
@@ -266,6 +570,9 @@ export default function Dashboard() {
         if (response.data.llm_explanation)
           setLlmExplanation(response.data.llm_explanation);
         if (response.data.chart_data) setErChartData(response.data.chart_data);
+        if (response.data.patient_forecast)
+          setPatientForecast(response.data.patient_forecast);
+        if (response.data.fte_info) setFteInfo(response.data.fte_info);
       }
     } catch {
       setUploadStatus("Error processing file.");
@@ -273,18 +580,56 @@ export default function Dashboard() {
     setTimeout(() => setUploadStatus(null), 4000);
   };
 
+  const LEVEL_ORDER = [
+    "RN Level 4",
+    "RN Level 3",
+    "RN Level 2",
+    "RN Level 1",
+    "Part-time",
+    "HOD",
+  ];
+  const abbreviateLevel = (level) => {
+    if (level === "Part-time") return "PT";
+    if (level === "HOD") return "HOD";
+    return level.replace("RN Level ", "L");
+  };
+
   const getShiftStatus = (day, shiftType) => {
     const slots = nurseSchedule.filter(
       (s) => s.day === day && s.shiftType === shiftType,
     );
     const target = slots.length;
-    const l4Needed = slots.filter((s) => s.reqLevel.includes("4")).length;
-    const l3Needed = slots.filter((s) => !s.reqLevel.includes("4")).length;
-    const assignedCount = assignedShifts.filter(
+    const countsByLevel = {};
+    slots.forEach((s) => {
+      countsByLevel[s.reqLevel] = (countsByLevel[s.reqLevel] || 0) + 1;
+    });
+
+    const assignedInShift = assignedShifts.filter(
       (a) => a.day === day && a.reqShift === shiftType,
-    ).length;
+    );
+    const assignedCountsByLevel = {};
+    assignedInShift.forEach((a) => {
+      const nurse = nursesList.find((n) => n.id === a.filledBy);
+      if (nurse) {
+        assignedCountsByLevel[nurse.level] =
+          (assignedCountsByLevel[nurse.level] || 0) + 1;
+      }
+    });
+
+    const levelBreakdown = LEVEL_ORDER.filter((lvl) => countsByLevel[lvl]).map(
+      (lvl) => {
+        const need = countsByLevel[lvl];
+        const have = assignedCountsByLevel[lvl] || 0;
+        return {
+          label: abbreviateLevel(lvl),
+          count: need,
+          fulfilled: have >= need,
+        };
+      },
+    );
+    const assignedCount = assignedInShift.length;
     const missing = target - assignedCount;
-    return { target, assignedCount, missing, l4Needed, l3Needed };
+    return { target, assignedCount, missing, levelBreakdown };
   };
 
   const chartData = useMemo(() => {
@@ -360,28 +705,90 @@ export default function Dashboard() {
 
       {/* Staff Profile Modal */}
       {selectedNurse && (
-        <div className="s-modal-overlay" onClick={() => setSelectedNurse(null)}>
+        <div
+          className="s-modal-overlay"
+          onClick={() => {
+            setSelectedNurse(null);
+            setIsEditingNurse(false);
+          }}
+        >
           <div className="s-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="s-modal-header">
               <div className="flex-center gap-2">
                 <Info size={20} className="text-blue" />
                 <h3>Staff Profile</h3>
               </div>
-              <button onClick={() => setSelectedNurse(null)}>
-                <X size={20} />
-              </button>
+              <div className="flex-center gap-2">
+                {!isEditingNurse && (
+                  <button onClick={startEditNurse} title="Edit nurse">
+                    <Edit3 size={18} />
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setSelectedNurse(null);
+                    setIsEditingNurse(false);
+                  }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
             <div className="s-modal-body">
-              <div className="s-profile-hero">
-                <div className="s-avatar-large">
-                  {selectedNurse.name.charAt(0)}
+              {isEditingNurse ? (
+                <div className="s-nurse-edit-form">
+                  <label>
+                    Name
+                    <input
+                      type="text"
+                      className="s-census-input s-nurse-edit-input"
+                      value={editNurseName}
+                      onChange={(e) => setEditNurseName(e.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Level
+                    <select
+                      className="s-census-input s-nurse-edit-input"
+                      value={editNurseLevel}
+                      onChange={(e) => setEditNurseLevel(e.target.value)}
+                    >
+                      {NURSE_LEVELS.map((lvl) => (
+                        <option key={lvl} value={lvl}>
+                          {lvl}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="s-nurse-edit-actions">
+                    <button
+                      className="s-btn-outline"
+                      onClick={() => setIsEditingNurse(false)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      className="s-btn-primary"
+                      onClick={handleSaveNurseEdit}
+                      disabled={isSavingNurse}
+                    >
+                      <Check size={16} />{" "}
+                      {isSavingNurse ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
                 </div>
-                <h2>{selectedNurse.name}</h2>
-                <div className="s-badges">
-                  <span className="s-badge-role">{selectedNurse.level}</span>
-                  <span className="s-badge-ward">{selectedNurse.ward}</span>
+              ) : (
+                <div className="s-profile-hero">
+                  <div className="s-avatar-large">
+                    {selectedNurse.name.charAt(0)}
+                  </div>
+                  <h2>{selectedNurse.name}</h2>
+                  <div className="s-badges">
+                    <span className="s-badge-role">{selectedNurse.level}</span>
+                    <span className="s-badge-ward">{selectedNurse.ward}</span>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="s-history-section">
                 <h4>
@@ -423,6 +830,144 @@ export default function Dashboard() {
                     h
                   </span>
                 </div>
+              </div>
+
+              {!isEditingNurse && (
+                <button
+                  className="s-btn-deactivate"
+                  onClick={handleDeactivateNurse}
+                >
+                  <UserX size={16} /> Deactivate Nurse
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Actual Patient Census Modal */}
+      {censusModalDay !== null && (
+        <div
+          className="s-modal-overlay"
+          onClick={() => setCensusModalDay(null)}
+        >
+          <div className="s-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="s-modal-header">
+              <div className="flex-center gap-2">
+                <Activity size={20} className="text-blue" />
+                <h3>
+                  Actual Patients — {nextMonthName.split(" ")[0]}{" "}
+                  {censusModalDay}
+                </h3>
+              </div>
+              <button onClick={() => setCensusModalDay(null)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="s-modal-body">
+              <div className="s-census-row">
+                <label>
+                  <Sun size={14} className="text-orange" /> Day shift patients
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="s-census-input"
+                  value={censusDayInput}
+                  onChange={(e) => setCensusDayInput(e.target.value)}
+                  placeholder="e.g. 45"
+                />
+              </div>
+              <div className="s-census-row">
+                <label>
+                  <Moon size={14} className="text-blue" /> Night shift
+                  patients
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  className="s-census-input"
+                  value={censusNightInput}
+                  onChange={(e) => setCensusNightInput(e.target.value)}
+                  placeholder="e.g. 30"
+                />
+              </div>
+              <button
+                className="s-btn-primary s-census-save-btn"
+                onClick={handleSaveCensus}
+                disabled={isSavingCensus}
+              >
+                <Save size={16} />{" "}
+                {isSavingCensus ? "Saving..." : "Save Actual Count"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Nurse Modal */}
+      {showAddNurseModal && (
+        <div
+          className="s-modal-overlay"
+          onClick={() => setShowAddNurseModal(false)}
+        >
+          <div className="s-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="s-modal-header">
+              <div className="flex-center gap-2">
+                <Plus size={20} className="text-blue" />
+                <h3>Add Nurse</h3>
+              </div>
+              <button onClick={() => setShowAddNurseModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="s-modal-body">
+              <div className="s-nurse-edit-form">
+                <label>
+                  Employee ID
+                  <input
+                    type="text"
+                    className="s-census-input s-nurse-edit-input"
+                    value={newNurseId}
+                    onChange={(e) => setNewNurseId(e.target.value)}
+                    placeholder="e.g. 630000"
+                  />
+                </label>
+                <label>
+                  Name
+                  <input
+                    type="text"
+                    className="s-census-input s-nurse-edit-input"
+                    value={newNurseName}
+                    onChange={(e) => setNewNurseName(e.target.value)}
+                    placeholder="e.g. Ms. Somchai Dee"
+                  />
+                </label>
+                <label>
+                  Level
+                  <select
+                    className="s-census-input s-nurse-edit-input"
+                    value={newNurseLevel}
+                    onChange={(e) => setNewNurseLevel(e.target.value)}
+                  >
+                    {NURSE_LEVELS.map((lvl) => (
+                      <option key={lvl} value={lvl}>
+                        {lvl}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {nurseFormError && (
+                  <div className="s-nurse-form-error">{nurseFormError}</div>
+                )}
+                <button
+                  className="s-btn-primary s-census-save-btn"
+                  onClick={handleAddNurse}
+                  disabled={isSavingNurse}
+                >
+                  <Plus size={16} />{" "}
+                  {isSavingNurse ? "Saving..." : "Add Nurse"}
+                </button>
               </div>
             </div>
           </div>
@@ -520,6 +1065,42 @@ export default function Dashboard() {
                 <span className="s-metric-sub text-red">Needs Attention</span>
               </div>
             </div>
+            {patientForecast && (
+              <div className="s-metric-card">
+                <div className="s-metric-icon bg-teal-light text-teal">
+                  <Activity size={28} />
+                </div>
+                <div className="s-metric-content">
+                  <span className="s-metric-title">Predicted Patients (ADC)</span>
+                  <span className="s-metric-value">
+                    {patientForecast.predicted_adc}
+                  </span>
+                  <span className="s-metric-sub">
+                    D {patientForecast.avg_day_patients} / N{" "}
+                    {patientForecast.avg_night_patients} per day —{" "}
+                    {patientForecast.model_used === "XGBoost Machine Learning"
+                      ? "ML"
+                      : "Baseline"}
+                  </span>
+                </div>
+              </div>
+            )}
+            {fteInfo && (
+              <div className="s-metric-card">
+                <div className="s-metric-icon bg-orange-light text-orange">
+                  <Briefcase size={28} />
+                </div>
+                <div className="s-metric-content">
+                  <span className="s-metric-title">Required FTE</span>
+                  <span className="s-metric-value">{fteInfo.required_fte}</span>
+                  <span className="s-metric-sub">
+                    {fteInfo.active_fte} active
+                    {fteInfo.fill_rate_pct !== null &&
+                      ` (${fteInfo.fill_rate_pct}%)`}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* === AI RECOMMENDATIONS BANNER === */}
@@ -590,12 +1171,18 @@ export default function Dashboard() {
               <div className="s-panel-header">
                 <div className="flex-center gap-2">
                   <BarChart size={18} className="text-muted" />{" "}
-                  <h3 className="s-panel-title">
-                    Hourly ER Load Forecast{" "}
-                    <span className="text-muted font-normal">
-                      ({nextMonthName})
+                  <div className="flex-col">
+                    <h3 className="s-panel-title">
+                      Predicted Patients — Day vs Night{" "}
+                      <span className="text-muted font-normal">
+                        ({nextMonthName})
+                      </span>
+                    </h3>
+                    <span className="text-muted text-xs">
+                      Day 07:00-19:00 · Night 19:00-07:00 — avg per day this
+                      month
                     </span>
-                  </h3>
+                  </div>
                 </div>
               </div>
               <div className="s-chart-wrap">
@@ -610,10 +1197,10 @@ export default function Dashboard() {
                       stroke="#f1f5f9"
                     />
                     <XAxis
-                      dataKey="hour"
+                      dataKey="period"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 11 }}
+                      tick={{ fill: "#64748b", fontSize: 12 }}
                       dy={10}
                     />
                     <YAxis
@@ -621,6 +1208,7 @@ export default function Dashboard() {
                       tickLine={false}
                       tick={{ fill: "#64748b", fontSize: 11 }}
                       dx={-10}
+                      allowDecimals={false}
                     />
                     <Tooltip
                       cursor={{ fill: "#f8fafc" }}
@@ -632,10 +1220,10 @@ export default function Dashboard() {
                     />
                     <Bar
                       dataKey="load"
-                      name="Patients"
+                      name="Predicted Patients"
                       fill="#3b82f6"
                       radius={[4, 4, 0, 0]}
-                      barSize={24}
+                      barSize={64}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -797,7 +1385,10 @@ export default function Dashboard() {
                       </div>
                     );
                   })}
-                  <button className="s-add-nurse-btn">
+                  <button
+                    className="s-add-nurse-btn"
+                    onClick={() => setShowAddNurseModal(true)}
+                  >
                     <Plus size={14} /> Add Nurse
                   </button>
                 </div>
@@ -832,13 +1423,22 @@ export default function Dashboard() {
                         key={day}
                         className={`s-cell ${isWeekend ? "weekend" : ""}`}
                       >
-                        <div className="s-cell-date">{day}</div>
+                        <div
+                          className={`s-cell-date ${actualCensus[day] ? "has-census" : ""}`}
+                          onClick={() => openCensusModal(day)}
+                          title="Click to log actual patient count"
+                        >
+                          {day}
+                          <Activity size={11} className="s-census-icon" />
+                          {actualCensus[day] && (
+                            <span className="s-census-dot" title="Actual census logged" />
+                          )}
+                        </div>
 
                         {/* DAY SHIFT */}
                         <div className="s-shift-section">
                           <div
                             className={`s-shift-header ${dStat.missing > 0 ? "shortage" : "fulfilled"}`}
-                            title={`Need L4:${dStat.l4Needed}, L3:${dStat.l3Needed}`}
                           >
                             <span className="s-shift-name">Day Shift</span>
                             <div className="flex-center gap-1">
@@ -850,6 +1450,18 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
+                          {dStat.levelBreakdown.length > 0 && (
+                            <div className="s-level-need-row">
+                              {dStat.levelBreakdown.map((lb) => (
+                                <span
+                                  key={lb.label}
+                                  className={`s-level-need-pill ${lb.fulfilled ? "fulfilled" : ""}`}
+                                >
+                                  {lb.label}×{lb.count}
+                                </span>
+                              ))}
+                            </div>
+                          )}
 
                           {/* AI Hints */}
                           {aiDrafts
@@ -915,7 +1527,6 @@ export default function Dashboard() {
                         <div className="s-shift-section mt-1">
                           <div
                             className={`s-shift-header ${nStat.missing > 0 ? "shortage" : "night-fulfilled"}`}
-                            title={`Need L4:${nStat.l4Needed}, L3:${nStat.l3Needed}`}
                           >
                             <span className="s-shift-name">Night Shift</span>
                             <div className="flex-center gap-1">
@@ -927,6 +1538,18 @@ export default function Dashboard() {
                               )}
                             </div>
                           </div>
+                          {nStat.levelBreakdown.length > 0 && (
+                            <div className="s-level-need-row">
+                              {nStat.levelBreakdown.map((lb) => (
+                                <span
+                                  key={lb.label}
+                                  className={`s-level-need-pill ${lb.fulfilled ? "fulfilled" : ""}`}
+                                >
+                                  {lb.label}×{lb.count}
+                                </span>
+                              ))}
+                            </div>
+                          )}
 
                           {/* AI Hints */}
                           {aiDrafts

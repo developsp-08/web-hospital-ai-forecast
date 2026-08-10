@@ -106,6 +106,12 @@
 .bg-red-light {
   background-color: var(--bg-red-light);
 }
+.bg-teal-light {
+  background-color: var(--bg-teal-light);
+}
+.bg-orange-light {
+  background-color: #fffbeb;
+}
 .bold {
   font-weight: 600;
 }
@@ -263,7 +269,7 @@
 /* === Metrics Grid === */
 .s-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
   margin-bottom: 24px;
 }
@@ -645,6 +651,119 @@
   font-weight: 600;
   margin-bottom: 8px;
   color: var(--text-dark);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+.s-cell-date:hover {
+  background: var(--bg-blue-light);
+}
+.s-cell-date.has-census {
+  color: var(--primary-blue);
+}
+.s-census-icon {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+.s-cell-date:hover .s-census-icon {
+  opacity: 1;
+  color: var(--primary-blue);
+}
+.s-cell-date.has-census .s-census-icon {
+  opacity: 1;
+}
+.s-census-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary-blue);
+  display: inline-block;
+}
+.s-census-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.s-census-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+.s-census-input {
+  width: 100px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  text-align: right;
+}
+.s-census-save-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 8px;
+  height: auto;
+  padding: 14px 16px;
+  font-size: 1rem;
+  border-radius: 10px;
+}
+
+/* Nurse management: add/edit form + deactivate */
+.s-nurse-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.s-nurse-edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-dark);
+}
+.s-nurse-edit-input {
+  width: 100%;
+  text-align: left;
+}
+.s-nurse-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+.s-nurse-form-error {
+  color: var(--warning-red);
+  font-size: 0.8rem;
+}
+.s-btn-deactivate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 16px;
+  border: 1px solid var(--warning-red);
+  border-radius: 10px;
+  background: none;
+  color: var(--warning-red);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.s-btn-deactivate:hover {
+  background: var(--warning-red);
+  color: white;
 }
 
 /* Shift Sections inside Cell */
@@ -685,6 +804,29 @@
 }
 .s-shift-count {
   font-weight: 600;
+}
+
+.s-level-need-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 3px 2px 4px;
+}
+.s-level-need-pill {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-main);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+.s-level-need-pill.fulfilled {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
 }
 
 .s-drop-zone {
